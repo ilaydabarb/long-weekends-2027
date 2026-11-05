@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Long Weekends 2027</title>
+<meta name="theme-color" content="#122230" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a1218" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="Weekends">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
@@ -52,14 +55,14 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
 
 /* Board header */
 .board{background:var(--board);color:var(--board-ink)}
-.board .wrap{padding-block:28px 0}
+.board .wrap{padding-block:calc(28px + env(safe-area-inset-top,0px)) 0}
 .brand{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
 .brand h1{font-size:clamp(30px,5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1}
 .brand h1 span{color:var(--flap)}
 .brand p{margin:8px 0 0;color:var(--board-dim);max-width:60ch}
 .legend{display:flex;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--board-dim)}
 .legend b{color:var(--board-ink);font-weight:700}
-.gates{display:flex;flex-wrap:wrap;gap:4px;margin-top:22px}
+.gates{display:flex;flex-wrap:wrap;gap:4px;margin-top:22px;position:relative}
 .gate{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--board-dim);
   background:var(--board-2);padding:10px 14px;border-radius:6px 6px 0 0;border-bottom:3px solid transparent;transition:color .15s,background .15s}
 .gate:hover{color:var(--board-ink)}
@@ -158,6 +161,34 @@ td.off{color:var(--muted)}
 .panel th,.panel td{text-align:left;white-space:normal;padding:6px 6px}
 .panel thead th{position:static}
 .disc{font-size:13px;color:var(--muted);padding-block:0 30px;max-width:80ch}
+.filterbtn{display:none;width:100%;align-items:center;justify-content:space-between;gap:12px;font:inherit;font-weight:700;font-size:15px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;text-align:left}
+.filterbtn .fsum{font-weight:500;font-size:13px;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.filterbtn .chev{transition:transform .2s;color:var(--muted)}
+.toolbar.open .filterbtn .chev{transform:rotate(180deg)}
+@media (max-width:640px){
+  .board .wrap{padding-block:calc(18px + env(safe-area-inset-top,0px)) 0}
+  .brand p{font-size:13.5px}
+  .legend{display:none}
+  .gates{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-top:16px;
+    margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));
+    padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .gates::-webkit-scrollbar{display:none}
+  .gate{flex:none;padding:9px 13px}
+  .toolbar{padding-block:12px}
+  .filterbtn{display:flex}
+  .toolbar:not(.open) .row{display:none}
+  .row{flex-direction:column;align-items:stretch;gap:12px}
+  .chip{font-size:14px;padding:8px 13px}
+  select{font-size:16px;flex:1}
+  .ctl{gap:7px}
+  .ctl > .lbl{width:100%}
+  .mhead{padding-block:16px 4px;gap:12px}
+  .fri{padding:9px 11px;font-size:13px}
+  .summary{font-size:13px;gap:4px 14px}
+  .facts div{grid-template-columns:78px minmax(0,1fr)}
+  .card h3{font-size:20px}
+  .btn{padding:10px 6px;font-size:13px}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -178,6 +209,7 @@ td.off{color:var(--muted)}
 
 <div class="wrap">
   <div class="toolbar" id="toolbar">
+    <button class="filterbtn" id="filterbtn" data-act="filters" aria-expanded="false" aria-controls="toolbar"><span>Filters</span><span class="fsum" id="fsum"></span><span class="chev" aria-hidden="true">▾</span></button>
     <div class="row">
       <div class="ctl" role="group" aria-label="Nights"><span class="lbl">Nights</span>
         <button class="chip" data-act="nights" data-v="3" id="n3">3 nights</button>
@@ -328,6 +360,8 @@ function renderGates(v){
   const g=document.getElementById('gates');
   const items=[['glance','Glance','all months'],...SLUG.map((s,i)=>[s,MONTHS[i],'2027']),['tips','Tips','& entry']];
   g.innerHTML=items.map(([k,l,sm])=>`<a class="gate" href="#${k}" ${k===v?'aria-current="page"':''}>${l}<small>${sm}</small></a>`).join('');
+  const cur=g.querySelector('[aria-current]');
+  if(cur&&g.scrollWidth>g.clientWidth)g.scrollLeft=cur.offsetLeft-g.clientWidth/2+cur.offsetWidth/2;
 }
 
 function syncToolbar(v){
@@ -342,6 +376,11 @@ function syncToolbar(v){
   if(!reg.options.length){reg.innerHTML=`<option value="all">All of Europe &amp; N. Africa</option>`+Object.values(R).map(r=>`<option>${r}</option>`).join('')}
   reg.value=S.region;
   document.getElementById('sort').value=S.sort;
+  const parts=[`${S.nights} nights`,patObj().l,S.stay==='hotel'?'Hotel':'Airbnb'];
+  if(S.tiers.length<3)parts.push(S.tiers.map(x=>'£'.repeat(+x)).join(' / '));
+  if(S.vibes.length)parts.push(S.vibes.map(x=>VIBE[x]).join(', '));
+  if(S.region!=='all')parts.push(S.region);
+  document.getElementById('fsum').textContent=parts.join(' · ');
 }
 
 function passes(dd){
@@ -530,6 +569,7 @@ function render(){
 document.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b||b.tagName==='SELECT')return;
   const a=b.dataset.act,v=b.dataset.v;
+  if(a==='filters'){const tb=document.getElementById('toolbar'),open=!tb.classList.contains('open');tb.classList.toggle('open',open);b.setAttribute('aria-expanded',open);return}
   if(a==='nights'){S.nights=+v;S.pat=PATTERNS[S.nights][0].k}
   else if(a==='pat')S.pat=v;
   else if(a==='stay')S.stay=v;
