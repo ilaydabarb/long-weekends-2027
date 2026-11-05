@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Long Weekends 2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a departure-board header with month "gates", then a grid of boarding-pass cards priced per person */
+:root{
+  --bg:#edf1f3; --surface:#ffffff; --surface-2:#f6f8f9; --ink:#132231; --muted:#566775; --line:#d3dce2;
+  --accent:#0b6a6d; --accent-soft:#dcefee; --accent-ink:#ffffff;
+  --board:#122230; --board-2:#1b3142; --board-ink:#f1f4f6; --board-dim:#9db0bf; --flap:#f2b544;
+  --t1:#1c7448; --t1-bg:#e0f2e8; --t2:#8a5a07; --t2-bg:#fbefd5; --t3:#a33a2b; --t3-bg:#fae2dd;
+  --warn:#8a5a07; --warn-bg:#fbefd5; --good:#1c7448; --good-bg:#e0f2e8; --info:#1f5f8a; --info-bg:#e1eef7;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body:"Public Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d161d; --surface:#15212b; --surface-2:#1a2833; --ink:#e5ecf0; --muted:#97a8b5; --line:#2a3b48;
+  --accent:#4fbdb7; --accent-soft:#173a3b; --accent-ink:#06201f;
+  --board:#0a1218; --board-2:#15232e; --board-ink:#eef2f4; --board-dim:#8ea2b1; --flap:#f2b544;
+  --t1:#74d6a3; --t1-bg:#163326; --t2:#eebc5d; --t2-bg:#382b12; --t3:#f2968a; --t3-bg:#3b1e1a;
+  --warn:#eebc5d; --warn-bg:#382b12; --good:#74d6a3; --good-bg:#163326; --info:#8cc4ec; --info-bg:#15293a;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d161d; --surface:#15212b; --surface-2:#1a2833; --ink:#e5ecf0; --muted:#97a8b5; --line:#2a3b48;
+  --accent:#4fbdb7; --accent-soft:#173a3b; --accent-ink:#06201f;
+  --board:#0a1218; --board-2:#15232e; --board-ink:#eef2f4; --board-dim:#8ea2b1; --flap:#f2b544;
+  --t1:#74d6a3; --t1-bg:#163326; --t2:#eebc5d; --t2-bg:#382b12; --t3:#f2968a; --t3-bg:#3b1e1a;
+  --warn:#eebc5d; --warn-bg:#382b12; --good:#74d6a3; --good-bg:#163326; --info:#8cc4ec; --info-bg:#15293a;
+  color-scheme:dark}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+img{max-width:100%}
+[hidden]{display:none!important}
+.fresh{font-family:var(--mono);font-size:12px;color:var(--board-dim);margin:10px 0 0;display:flex;align-items:center;gap:8px}
+.fresh i{width:8px;height:8px;border-radius:50%;background:var(--board-dim);display:inline-block}
+.fresh.live i{background:#4cd187}
+.btn.wide{grid-column:1/-1}
+.calc .src{font-size:11.5px;color:var(--muted);margin:-1px 0 4px}
+.livehint{margin:8px 16px 0;font-size:12.5px;color:var(--good)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+
+/* Board header */
+.board{background:var(--board);color:var(--board-ink)}
+.board .wrap{padding-block:28px 0}
+.brand{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.brand h1{font-size:clamp(30px,5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1}
+.brand h1 span{color:var(--flap)}
+.brand p{margin:8px 0 0;color:var(--board-dim);max-width:60ch}
+.legend{display:flex;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--board-dim)}
+.legend b{color:var(--board-ink);font-weight:700}
+.gates{display:flex;flex-wrap:wrap;gap:4px;margin-top:22px}
+.gate{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--board-dim);
+  background:var(--board-2);padding:10px 14px;border-radius:6px 6px 0 0;border-bottom:3px solid transparent;transition:color .15s,background .15s}
+.gate:hover{color:var(--board-ink)}
+.gate[aria-current="page"]{background:var(--bg);color:var(--ink);border-bottom-color:var(--flap)}
+.gate small{display:block;font-size:10px;letter-spacing:.04em;font-weight:500;opacity:.8}
+
+/* Toolbar */
+.toolbar{display:flex;flex-direction:column;gap:12px;padding-block:18px;border-bottom:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+.ctl{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ctl > .lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 11px;border-radius:999px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+select{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 10px;border-radius:8px;max-width:100%}
+
+/* Month head */
+.mhead{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;padding-block:24px 8px}
+@media (max-width:820px){.mhead{grid-template-columns:minmax(0,1fr)}}
+.mhead h2{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.015em}
+.mnote{color:var(--muted);max-width:68ch;margin:6px 0 0}
+.dates{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.dates .lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.fris{display:flex;flex-wrap:wrap;gap:6px}
+.fri{font-family:var(--mono);font-size:12px;font-weight:700;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);padding:6px 9px;border-radius:6px;cursor:pointer;position:relative}
+.fri[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.fri .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle}
+.dot.s{background:var(--t3)} .dot.h{background:var(--good)}
+.tripline{font-family:var(--mono);font-size:13px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.tripline strong{font-size:15px}
+.flag{font-family:var(--body);font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px}
+.flag.s{background:var(--t3-bg);color:var(--t3)} .flag.h{background:var(--good-bg);color:var(--good)} .flag.n{background:var(--surface-2);color:var(--muted)}
+
+.summary{display:flex;flex-wrap:wrap;gap:8px 20px;padding-block:10px 16px;color:var(--muted);font-size:14px}
+.summary b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* Cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,310px),1fr));gap:16px;padding-bottom:40px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;min-width:0;position:relative}
+.card .top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px 0;gap:8px}
+.route{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.06em;color:var(--muted);display:flex;align-items:center;gap:6px}
+.route b{color:var(--ink);font-size:18px}
+.tier{font-family:var(--mono);font-weight:700;font-size:13px;padding:3px 9px;border-radius:6px}
+.tier.t1{background:var(--t1-bg);color:var(--t1)} .tier.t2{background:var(--t2-bg);color:var(--t2)} .tier.t3{background:var(--t3-bg);color:var(--t3)}
+.card .head{padding:6px 16px 0}
+.card h3{font-size:21px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+.country{color:var(--muted);font-size:13px;margin:2px 0 0}
+.tags{display:flex;flex-wrap:wrap;gap:5px;padding:10px 16px 0}
+.tag{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.tag.good{background:var(--good-bg);color:var(--good);border-color:transparent}
+.tag.warn{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.tag.info{background:var(--info-bg);color:var(--info);border-color:transparent}
+.facts{margin:0;padding:12px 16px 0;display:grid;gap:6px}
+.facts div{display:grid;grid-template-columns:88px minmax(0,1fr);gap:8px;font-size:13.5px}
+.facts dt{color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding-top:2px}
+.facts dd{margin:0}
+.note{margin:10px 16px 0;font-size:13px;color:var(--muted);border-left:2px solid var(--line);padding-left:10px}
+.calc{margin:14px 16px 0;background:var(--surface-2);border-radius:8px;padding:10px 12px;font-size:13px;font-variant-numeric:tabular-nums}
+.calc .ln{display:flex;justify-content:space-between;gap:10px}
+.calc .ln span:first-child{color:var(--muted)}
+.calc .tot{display:flex;justify-content:space-between;align-items:baseline;border-top:1px dashed var(--line);margin-top:6px;padding-top:6px}
+.calc .tot b{font-family:var(--mono);font-size:20px}
+.calc .sub{color:var(--muted);font-size:12px;margin-top:2px}
+.perf{margin-top:auto;padding-top:14px;position:relative}
+.perf::before{content:"";display:block;border-top:2px dashed var(--line);margin:0 14px}
+.perf::after{content:"";position:absolute;left:-9px;right:-9px;top:6px;height:18px;
+  background:radial-gradient(circle at 9px 9px,var(--bg) 8px,transparent 8.5px) left/18px 18px no-repeat,radial-gradient(circle at 9px 9px,var(--bg) 8px,transparent 8.5px) right/18px 18px no-repeat}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:12px 16px 16px}
+.btn{display:block;text-align:center;font-size:12.5px;font-weight:700;text-decoration:none;padding:8px 6px;border-radius:7px;border:1px solid var(--line);color:var(--ink);background:var(--surface)}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.pri:hover{color:var(--accent-ink);filter:brightness(1.08)}
+.empty{padding:40px 0;color:var(--muted)}
+
+/* Glance table */
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);margin-bottom:40px}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+thead th{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--muted);position:sticky;top:0;background:var(--surface);z-index:1}
+tbody th{text-align:left;font-weight:600;position:sticky;left:0;background:var(--surface);z-index:1}
+tbody th small{display:block;font-weight:400;color:var(--muted)}
+td a{display:block;text-decoration:none;border-radius:6px;padding:4px 6px;color:inherit}
+td a b{font-family:var(--mono);font-size:13px}
+td a small{display:block;color:var(--muted);font-size:11px}
+td.t1 a{background:var(--t1-bg);color:var(--t1)} td.t2 a{background:var(--t2-bg);color:var(--t2)} td.t3 a{background:var(--t3-bg);color:var(--t3)}
+td.best a{outline:2px solid currentColor;outline-offset:-2px}
+td.off{color:var(--muted)}
+
+/* Tips */
+.tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:16px;padding-block:24px 40px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;min-width:0}
+.panel h3{font-size:19px;margin-bottom:8px}
+.panel ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.panel p{margin:0 0 8px}
+.panel table{font-size:13px}
+.panel th,.panel td{text-align:left;white-space:normal;padding:6px 6px}
+.panel thead th{position:static}
+.disc{font-size:13px;color:var(--muted);padding-block:0 30px;max-width:80ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="board">
+  <div class="wrap">
+    <div class="brand">
+      <div>
+        <h1>Long Weekends <span>2027</span></h1>
+        <p>From London, January to August. Every trip is 3–5 nights and always covers Friday and Saturday night. Prices are per person: return flight plus half the room.</p>
+        <p class="fresh" id="fresh"><i></i><span>Loading prices…</span></p>
+      </div>
+      <div class="legend"><span><b>£</b> under £200</span><span><b>££</b> £200–350</span><span><b>£££</b> £350+</span></div>
+    </div>
+    <nav class="gates" id="gates" aria-label="Sections"></nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="toolbar" id="toolbar">
+    <div class="row">
+      <div class="ctl" role="group" aria-label="Nights"><span class="lbl">Nights</span>
+        <button class="chip" data-act="nights" data-v="3" id="n3">3 nights</button>
+        <button class="chip" data-act="nights" data-v="4" id="n4">4 nights</button>
+        <button class="chip" data-act="nights" data-v="5" id="n5">5 nights</button>
+      </div>
+      <div class="ctl" role="group" aria-label="Pattern" id="patterns"></div>
+      <div class="ctl" role="group" aria-label="Stay type"><span class="lbl">Stay</span>
+        <button class="chip" data-act="stay" data-v="hotel" id="sh">Hotel 3★+</button>
+        <button class="chip" data-act="stay" data-v="bnb" id="sb">Whole Airbnb</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="ctl" role="group" aria-label="Budget"><span class="lbl">Budget</span>
+        <button class="chip" data-act="tier" data-v="1" id="tr1">£</button>
+        <button class="chip" data-act="tier" data-v="2" id="tr2">££</button>
+        <button class="chip" data-act="tier" data-v="3" id="tr3">£££</button>
+      </div>
+      <div class="ctl" role="group" aria-label="Vibe"><span class="lbl">Vibe</span>
+        <button class="chip" data-act="vibe" data-v="c" id="vc">City</button>
+        <button class="chip" data-act="vibe" data-v="b" id="vb">Beach &amp; sun</button>
+        <button class="chip" data-act="vibe" data-v="f" id="vf">Food &amp; wine</button>
+      </div>
+      <div class="ctl"><label class="lbl" for="region">Region</label><select id="region" data-act="region"></select></div>
+      <div class="ctl"><label class="lbl" for="sort">Sort</label>
+        <select id="sort" data-act="sort">
+          <option value="cost">Cheapest first</option>
+          <option value="warm">Warmest first</option>
+          <option value="fly">Shortest flight</option>
+          <option value="name">A–Z</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <main id="view"></main>
+  <p class="disc">Fares marked "live" are refreshed every morning. Ryanair prices come straight from Ryanair's fare finder for every weekend. Other airlines come from fares found in recent searches (via Travelpayouts), which fill in as dates get closer. Everything else is an estimate based on typical fares and 3★+ (rated 8+) room rates, adjusted for season and school holidays. Fares change by the minute, so use the buttons on each card for the exact price before you book. Airbnb totals include a typical £35 cleaning fee.</p>
+</div>
+
+<script>
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'];
+const MFULL=['January','February','March','April','May','June','July','August'];
+const SLUG=['jan','feb','mar','apr','may','jun','jul','aug'];
+const VIBE={c:'City',b:'Beach & sun',f:'Food & wine'};
+
+// Season multipliers Jan–Aug: c city, b beach, w winter sun, l long-haul Caucasus, a arctic
+const CURVE={
+  c:[0.85,0.85,0.95,1.05,1.05,1.15,1.35,1.45],
+  b:[0.85,0.9,0.95,1.05,1.1,1.35,1.65,1.8],
+  w:[1.1,1.15,1.05,1.05,0.95,1.0,1.25,1.35],
+  l:[0.9,0.9,0.95,1.05,1.05,1.15,1.25,1.25],
+  a:[1.2,1.2,1.1,0.9,0.9,1.05,1.15,1.1]
+};
+
+let DEST=[],R={},PRICES=null;
+
+// UK bank holidays 2027 and approximate London state-school holidays
+const BANK=new Set(['2027-01-01','2027-03-26','2027-03-29','2027-05-03','2027-05-31','2027-08-30']);
+const SCHOOL=[['2027-02-13','2027-02-21'],['2027-03-27','2027-04-11'],['2027-05-29','2027-06-06'],['2027-07-22','2027-08-31']];
+const NEWYEAR=['2026-12-29','2027-01-03'];
+const PATTERNS={
+  3:[{k:'thu-sun',l:'Thu → Sun',s:-1,e:2},{k:'fri-mon',l:'Fri → Mon',s:0,e:3}],
+  4:[{k:'thu-mon',l:'Thu → Mon',s:-1,e:3},{k:'fri-tue',l:'Fri → Tue',s:0,e:4}],
+  5:[{k:'wed-mon',l:'Wed → Mon',s:-2,e:3},{k:'thu-tue',l:'Thu → Tue',s:-1,e:4}]
+};
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MON12=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+const pad=n=>String(n).padStart(2,'0');
+const iso=dt=>`${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+const addDays=(dt,n)=>new Date(dt.getFullYear(),dt.getMonth(),dt.getDate()+n);
+const pretty=dt=>`${DOW[dt.getDay()]} ${dt.getDate()} ${MON12[dt.getMonth()]}`;
+const r5=x=>Math.round(x/5)*5;
+const fmtH=h=>{const m=Math.round(h*60);return `${Math.floor(m/60)}h${m%60?` ${pad(m%60)}m`:''}`};
+const yymmdd=dt=>`${String(dt.getFullYear()).slice(2)}${pad(dt.getMonth()+1)}${pad(dt.getDate())}`;
+
+function fridays(m){const out=[];for(let i=1;i<=31;i++){const dt=new Date(2027,m,i);if(dt.getMonth()!==m)break;if(dt.getDay()===5)out.push(dt)}return out}
+function inRange(s,a,b){return s>=a&&s<=b}
+function trip(fri,pat){
+  const start=addDays(fri,pat.s),end=addDays(fri,pat.e);
+  let off=0,bank=false,school=false,ny=false;
+  for(let i=pat.s;i<=pat.e;i++){
+    const day=addDays(fri,i),k=iso(day),w=day.getDay();
+    if(BANK.has(k))bank=true;
+    if(SCHOOL.some(r=>inRange(k,r[0],r[1])))school=true;
+    if(inRange(k,NEWYEAR[0],NEWYEAR[1]))ny=true;
+    if(i>pat.s&&w>=1&&w<=5&&!BANK.has(k))off++;
+  }
+  const mult=1+(school?0.25:0)+(ny?0.4:0)+(bank&&!school?0.15:0);
+  return {start,end,off,bank,school,ny,mult};
+}
+function cost(dd,m,nights,stay,mult,t){
+  const f=CURVE[dd.cv][m];
+  const lf=liveFlight(dd,t),lh=stay==='hotel'?liveHotel(dd,m):null;
+  const flight=lf?lf.price:r5(dd.fare*f*mult);
+  const roomMult=(1+(f-1)*0.8)*(1+(mult-1)*0.5);
+  const room=lh?lh.nightly:r5((stay==='hotel'?dd.hotel:dd.bnb)*roomMult);
+  const stayTotal=room*nights+(stay==='bnb'?35:0);
+  const stayPP=r5(stayTotal/2);
+  return {flight,room,stayTotal,stayPP,total:flight+stayPP,lf,lh};
+}
+const mk=m=>`2027-${pad(m+1)}`;
+function liveFlight(dd,t){
+  const f=PRICES&&PRICES.flights&&PRICES.flights[dd.id];if(!f||!t)return null;
+  const r=f[iso(t.start)+'|'+iso(t.end)];
+  if(!r)return null;
+  const dep=iso(t.start),ret=iso(t.end);
+  const link=r[5]==='fr'?`https://www.ryanair.com/gb/en/trip/flights/select?adults=1&teens=0&children=0&infants=0&dateOut=${dep}&dateIn=${ret}&isConnectedFlight=false&isReturn=true&discount=0&originIata=${r[3]}&destinationIata=${r[4]}`
+    :r[4]?'https://www.aviasales.com'+r[4]:'';
+  return {price:r[0],airline:r[1],stops:r[2],airport:r[3],link};
+}
+function cheapestLive(dd,m,nights){
+  const f=PRICES&&PRICES.flights&&PRICES.flights[dd.id];if(!f)return null;
+  let best=null;
+  for(const k in f){
+    if(k.slice(0,7)!==mk(m))continue;
+    const [a,b]=k.split('|'),n=Math.round((new Date(b)-new Date(a))/864e5);
+    if(n!==nights)continue;
+    if(!best||f[k][0]<best.price)best={dep:a,ret:b,price:f[k][0],airline:f[k][1],stops:f[k][2]};
+  }
+  return best;
+}
+function liveHotel(dd,m){const h=PRICES&&PRICES.hotels&&PRICES.hotels[dd.id];return h&&h[mk(m)]||null}
+function ago(isoStr){const h=(Date.now()-new Date(isoStr))/36e5;return h<1?'under an hour ago':h<48?`${Math.round(h)}h ago`:`${Math.round(h/24)} days ago`}
+const shortD=s=>{const d=new Date(s+'T12:00:00');return `${DOW[d.getDay()]} ${d.getDate()} ${MON12[d.getMonth()]}`};
+const tierOf=t=>t<=200?1:t<=350?2:3;
+
+// State
+const DEF={nights:3,pat:'thu-sun',stay:'hotel',tiers:['1','2','3'],vibes:[],region:'all',sort:'cost',fri:{}};
+let S=DEF;
+try{const raw=localStorage.getItem('lw27');if(raw)S=Object.assign({},DEF,JSON.parse(raw))}catch(e){}
+function save(){try{localStorage.setItem('lw27',JSON.stringify(S))}catch(e){}}
+const patObj=()=>PATTERNS[S.nights].find(p=>p.k===S.pat)||PATTERNS[S.nights][0];
+
+function defaultFri(m){
+  const fr=fridays(m),p=patObj();
+  return iso((fr.find(f=>{const t=trip(f,p);return !t.school&&!t.ny})||fr[0]));
+}
+function currentFri(m){
+  const fr=fridays(m),want=S.fri[SLUG[m]];
+  const hit=fr.find(f=>iso(f)===want);
+  return hit||fr.find(f=>iso(f)===defaultFri(m));
+}
+
+// Navigation
+const VIEWS=['glance',...SLUG,'tips'];
+function curView(){const h=location.hash.slice(1);return VIEWS.includes(h)?h:'jan'}
+function renderGates(v){
+  const g=document.getElementById('gates');
+  const items=[['glance','Glance','all months'],...SLUG.map((s,i)=>[s,MONTHS[i],'2027']),['tips','Tips','& entry']];
+  g.innerHTML=items.map(([k,l,sm])=>`<a class="gate" href="#${k}" ${k===v?'aria-current="page"':''}>${l}<small>${sm}</small></a>`).join('');
+}
+
+function syncToolbar(v){
+  document.getElementById('toolbar').hidden=(v==='tips');
+  [3,4,5].forEach(n=>document.getElementById('n'+n).setAttribute('aria-pressed',S.nights===n));
+  document.getElementById('patterns').innerHTML=`<span class="lbl">Days</span>`+PATTERNS[S.nights].map(p=>`<button class="chip" data-act="pat" data-v="${p.k}" id="p-${p.k}" aria-pressed="${p.k===patObj().k}">${p.l}</button>`).join('');
+  document.getElementById('sh').setAttribute('aria-pressed',S.stay==='hotel');
+  document.getElementById('sb').setAttribute('aria-pressed',S.stay==='bnb');
+  ['1','2','3'].forEach(t=>document.getElementById('tr'+t).setAttribute('aria-pressed',S.tiers.includes(t)));
+  ['c','b','f'].forEach(t=>document.getElementById('v'+t).setAttribute('aria-pressed',S.vibes.includes(t)));
+  const reg=document.getElementById('region');
+  if(!reg.options.length){reg.innerHTML=`<option value="all">All of Europe &amp; N. Africa</option>`+Object.values(R).map(r=>`<option>${r}</option>`).join('')}
+  reg.value=S.region;
+  document.getElementById('sort').value=S.sort;
+}
+
+function passes(dd){
+  if(S.region!=='all'&&dd.region!==S.region)return false;
+  if(S.vibes.length&&!S.vibes.some(v=>dd.vibes.includes(v)))return false;
+  return true;
+}
+
+function bestMonth(dd){
+  let best=null,bm=-1;
+  dd.months.forEach(m=>{const c=cost(dd,m,S.nights,S.stay,1).total;if(best===null||c<best){best=c;bm=m}});
+  return bm;
+}
+
+const NOTES=[
+  'The cheapest month of the year for flights and hotels. Skip the New Year weekend. For winter sun, try the Canaries, Madeira, Agadir, Cyprus or Egypt. For cheap winter cities, try Kraków, Budapest (thermal baths), Prague or Vienna. For northern lights, try Tromsø, Lapland or Iceland.',
+  'Still low season. Avoid half-term (around 13–21 February), when fares jump. Carnival season runs in early February in Tenerife, Gran Canaria, Madeira and Cologne. Northern lights season is in full swing.',
+  'Easter is early. Good Friday (26 March) and Easter Monday (29 March) are bank holidays, so Thu → Mon costs just one day off. Prices rise that weekend, so book early. Valencia\'s Fallas runs 15–19 March.',
+  'Shoulder season starts and seasonal routes to Greece, Turkey and Croatia return. The Easter school holidays run into early April, so mid- to late-April weekends are better value.',
+  'Two bank holidays: Monday 3 May and Monday 31 May. It\'s warm enough for beaches in southern Spain, Malta, Greece, Turkey and Tunisia at shoulder-season prices. Nordic cities come alive.',
+  'The sweet spot before the school holidays. Avoid the half-term week at the very start of June. The sea is swimmable almost everywhere in the south, and the Nordics have near-endless daylight.',
+  'Peak season starts when English schools break up (around 22 July), so go in early July. Best value: Albania, North Macedonia, Bulgaria\'s coast, Tunisia, Turkish all-inclusives, Poland and the Baltics.',
+  'The most expensive month. Bank holiday: Monday 30 August. Head east for value (Albania, Bulgaria, Montenegro, Moldova) or north to dodge the heat (Baltics, Scandinavia, Iceland). Skip Seville, Marrakech and Fes (36°C+).'
+];
+
+function links(dd,t){
+  const out=iso(t.start),ret=iso(t.end);
+  const gf=`https://www.google.com/travel/flights?q=${encodeURIComponent(`Flights from London to ${dd.code} on ${out} returning ${ret}`)}`;
+  const sky=`https://www.skyscanner.net/transport/flights/lond/${(dd.sky||dd.code).toLowerCase()}/${yymmdd(t.start)}/${yymmdd(t.end)}/?adultsv2=2&cabinclass=economy`;
+  const place=dd.city.split(' (')[0].split(' & ')[0];
+  const q=`${place}, ${dd.country.split(' / ')[0]}`;
+  const bk=`https://www.booking.com/searchresults.en-gb.html?ss=${encodeURIComponent(q)}&checkin=${out}&checkout=${ret}&group_adults=2&no_rooms=1&group_children=0&nflt=${encodeURIComponent('class=3;class=4;class=5;review_score=80')}&order=price`;
+  const ab=`https://www.airbnb.co.uk/s/${encodeURIComponent(q)}/homes?checkin=${out}&checkout=${ret}&adults=2&room_types%5B%5D=Entire%20home%2Fapt`;
+  const fl=dd.rail?`<a class="btn pri" href="https://www.eurostar.com/uk-en" target="_blank" rel="noopener">Eurostar</a>`:`<a class="btn pri" href="${gf}" target="_blank" rel="noopener">Google Flights</a>`;
+  return `${fl}<a class="btn" href="${sky}" target="_blank" rel="noopener">Skyscanner</a><a class="btn" href="${bk}" target="_blank" rel="noopener">Booking 3★+</a><a class="btn" href="${ab}" target="_blank" rel="noopener">Airbnb</a>`;
+}
+
+function card(dd,m,t){
+  const c=cost(dd,m,S.nights,S.stay,t.mult,t),tier=tierOf(c.total),temp=dd.temps[m],cl=cheapestLive(dd,m,S.nights);
+  const tags=[];
+  if(bestMonth(dd)===m)tags.push(['good','Cheapest month']);
+  if(temp>=20&&temp<=28&&CURVE[dd.cv][m]<=1.1)tags.push(['good','Sweet spot']);
+  if(m<=2&&temp>=19)tags.push(['info','Winter sun']);
+  if(temp>=33)tags.push(['warn',`Hot (${temp}°C)`]);
+  if(temp<=3)tags.push(['info','Cold: pack layers']);
+  if(dd.fh>=4.5&&S.nights<4)tags.push(['warn','Long flight for 3 nights']);
+  if(c.lf)tags.unshift(['good','Live fare']);
+  if(dd.rail)tags.push(['info','No flight needed']);
+  tags.push(['',dd.vibes.split('').map(v=>VIBE[v]).join(' · ')]);
+  const stayLbl=S.stay==='hotel'?'Hotel 3★+':'Whole Airbnb';
+  return `<article class="card">
+    <div class="top"><div class="route">LON <span aria-hidden="true">→</span> <b>${dd.code}</b></div><span class="tier t${tier}" title="Per-person tier">${'£'.repeat(tier)}</span></div>
+    <div class="head"><h3>${dd.city}</h3><p class="country">${dd.country} · ${dd.region}</p></div>
+    <div class="tags">${tags.map(([k,l])=>`<span class="tag ${k}">${l}</span>`).join('')}</div>
+    <dl class="facts">
+      <div><dt>Weather</dt><dd>${temp}°C average high</dd></div>
+      <div><dt>Getting there</dt><dd>${fmtH(dd.fh)} · ${dd.ap}</dd></div>
+      <div><dt>Airlines</dt><dd>${dd.al}</dd></div>
+      <div><dt>Stay in</dt><dd>${dd.area}</dd></div>
+      <div><dt>Eat &amp; do</dt><dd>${dd.tip}</dd></div>
+    </dl>
+    ${dd.note?`<p class="note">${dd.note}</p>`:''}
+    ${!c.lf&&cl?`<p class="livehint">Cheapest live ${S.nights}-night fare this month: £${cl.price}, ${shortD(cl.dep)} → ${shortD(cl.ret)}</p>`:''}
+    <div class="calc">
+      <div class="ln"><span>Return ${dd.rail?'train/flight':'flight'}, per person ${c.lf?'(live)':'(estimate)'}</span><span>${c.lf?'':'~'}£${c.flight}</span></div>
+      ${c.lf?`<div class="src">${c.lf.airline||'Airline'} · ${c.lf.stops?c.lf.stops+' stop':'direct'}${c.lf.airport?' · from '+c.lf.airport:''}</div>`:''}
+      <div class="ln"><span>${stayLbl}${c.lh?' (live)':''}: £${c.room}/night × ${S.nights}${S.stay==='bnb'?' + £35 cleaning':''} ÷ 2</span><span>~£${c.stayPP}</span></div>
+      <div class="tot"><span>Each, flights + stay</span><b>£${c.total}</b></div>
+      <div class="sub">£${c.total*2} for both of you · plus ~£${dd.daily}/day each for food and local transport</div>
+    </div>
+    <div class="perf"></div>
+    <div class="links">${c.lf&&c.lf.link?`<a class="btn pri wide" href="${c.lf.link}" target="_blank" rel="noopener">Book this £${c.lf.price} fare${c.lf.airline==='Ryanair'?' on Ryanair':''}</a>`:''}${links(dd,t)}</div>
+  </article>`;
+}
+
+function sortList(list,m,t){
+  const k=S.sort;
+  return list.sort((a,b)=>k==='warm'?b.temps[m]-a.temps[m]:k==='fly'?a.fh-b.fh:k==='name'?a.city.localeCompare(b.city):cost(a,m,S.nights,S.stay,t.mult,t).total-cost(b,m,S.nights,S.stay,t.mult,t).total);
+}
+
+function renderMonth(m){
+  const p=patObj(),fri=currentFri(m),t=trip(fri,p);
+  const fr=fridays(m);
+  const all=DEST.filter(dd=>dd.months.includes(m)&&passes(dd));
+  const shown=sortList(all.filter(dd=>S.tiers.includes(String(tierOf(cost(dd,m,S.nights,S.stay,t.mult,t).total)))),m,t);
+  const byCost=[...all].sort((a,b)=>cost(a,m,S.nights,S.stay,t.mult,t).total-cost(b,m,S.nights,S.stay,t.mult,t).total);
+  const liveN=all.filter(dd=>liveFlight(dd,t)).length;
+  const under=all.filter(dd=>cost(dd,m,S.nights,S.stay,t.mult,t).total<=200).length;
+  const flags=[];
+  if(t.bank)flags.push(`<span class="flag h">Bank holiday: fewer days off</span>`);
+  if(t.school)flags.push(`<span class="flag s">School holidays: fares ~25% higher</span>`);
+  if(t.ny)flags.push(`<span class="flag s">New Year: fares high</span>`);
+  if(!flags.length)flags.push(`<span class="flag n">Normal-price weekend</span>`);
+  const friBtns=fr.map(f=>{const tt=trip(f,p);return `<button class="fri" data-act="fri" data-v="${iso(f)}" id="f-${iso(f)}" aria-pressed="${iso(f)===iso(fri)}">Fri ${f.getDate()}${tt.school||tt.ny?'<span class="dot s" aria-label="school holiday"></span>':''}${tt.bank&&!tt.school?'<span class="dot h" aria-label="bank holiday"></span>':''}</button>`}).join('');
+  return `<section class="mhead">
+      <div><h2>${MFULL[m]} 2027</h2><p class="mnote">${NOTES[m]}</p></div>
+      <div class="dates">
+        <span class="lbl">Pick your weekend</span>
+        <div class="fris">${friBtns}</div>
+        <div class="tripline"><strong>${pretty(t.start)} → ${pretty(t.end)}</strong><span>${S.nights} nights · ${t.off} day${t.off===1?'':'s'} off</span></div>
+        <div class="tripline">${flags.join('')}</div>
+      </div>
+    </section>
+    <div class="summary"><span><b>${shown.length}</b> of ${all.length} trips shown</span><span><b>${liveN}</b> with live fares for these dates</span><span><b>${under}</b> under £200 each</span>${byCost.length?`<span>Cheapest: <b>${byCost.slice(0,3).map(x=>`${x.city} £${cost(x,m,S.nights,S.stay,t.mult,t).total}`).join(' · ')}</b></span>`:''}</div>
+    ${shown.length?`<div class="grid">${shown.map(dd=>card(dd,m,t)).join('')}</div>`:`<p class="empty">No trips match these filters. Try adding another budget tier or switching the region back to "All".</p>`}`;
+}
+
+function renderGlance(){
+  const list=DEST.filter(passes).map(dd=>{const costs=MONTHS.map((_,m)=>{if(!dd.months.includes(m))return null;const c=cost(dd,m,S.nights,S.stay,1),cl=cheapestLive(dd,m,S.nights);return cl?cl.price+c.stayPP:c.total});const valid=costs.filter(x=>x!==null);return {dd,costs,min:Math.min(...valid)}});
+  if(S.sort==='name')list.sort((a,b)=>a.dd.city.localeCompare(b.dd.city));
+  else if(S.sort==='fly')list.sort((a,b)=>a.dd.fh-b.dd.fh);
+  else list.sort((a,b)=>a.min-b.min);
+  const rows=list.map(({dd,costs,min})=>`<tr><th scope="row">${dd.city}<small>${dd.country}</small></th>${costs.map((c,m)=>c===null?`<td class="off">–</td>`:`<td class="t${tierOf(c)}${c===min?' best':''}"><a href="#${SLUG[m]}" title="${dd.city} in ${MFULL[m]}"><b>£${c}</b><small>${dd.temps[m]}°C</small></a></td>`).join('')}</tr>`).join('');
+  return `<section class="mhead"><div><h2>The year at a glance</h2><p class="mnote">Estimated cost per person for ${S.nights} nights (${S.stay==='hotel'?'3★+ hotel':'whole Airbnb'}) on the cheapest live-fare weekend for that month (or an estimate for a normal weekend where there's no live fare yet). The outlined cell is each destination's cheapest month. A dash means it's out of season or too hot or cold that month. Click any price to open that month. Budget filters don't apply to this table.</p></div>
+    <div class="dates"><span class="lbl">Showing</span><div class="tripline"><strong>${list.length} destinations</strong><span>${S.region==='all'?'All regions':S.region}</span></div><div class="tripline"><span class="tier t1">£ under £200</span><span class="tier t2">££ £200–350</span><span class="tier t3">£££ £350+</span></div></div></section>
+    <div class="tablebox"><table><thead><tr><th scope="col">Destination</th>${MONTHS.map(x=>`<th scope="col">${x.toUpperCase()}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function renderTips(){
+  const regions=Object.values(R).map(r=>`<li><b>${r}:</b> ${[...new Set(DEST.filter(x=>x.region===r).map(x=>x.country))].join(', ')}</li>`).join('');
+  return `<div class="tips">
+    <section class="panel"><h3>Bank holidays 2027: free extra nights</h3>
+      <table><thead><tr><th>Weekend</th><th>Trip</th><th>Days off</th></tr></thead><tbody>
+      <tr><td>Easter: Good Fri 26 Mar + Easter Mon 29 Mar</td><td>Thu 25 → Mon 29 Mar (4 nights)</td><td>0</td></tr>
+      <tr><td>Easter, longer</td><td>Thu 25 → Tue 30 Mar (5 nights)</td><td>1</td></tr>
+      <tr><td>Early May: Mon 3 May</td><td>Thu 29 Apr → Mon 3 May (4 nights)</td><td>1</td></tr>
+      <tr><td>Spring: Mon 31 May</td><td>Thu 27 → Mon 31 May (4 nights)</td><td>1</td></tr>
+      <tr><td>Summer: Mon 30 Aug</td><td>Thu 26 → Mon 30 Aug (4 nights)</td><td>1</td></tr>
+      </tbody></table>
+      <p style="margin-top:10px;color:var(--muted);font-size:13px">Days off assume you fly in the evening after work. Fares rise on these weekends, so book them 2–3 months ahead.</p>
+    </section>
+    <section class="panel"><h3>Airports from central London</h3>
+      <table><thead><tr><th>Airport</th><th>Cheapest way in</th><th>Rough single</th></tr></thead><tbody>
+      <tr><td>Heathrow (LHR)</td><td>Piccadilly line</td><td>~£6</td></tr>
+      <tr><td>City (LCY)</td><td>DLR</td><td>~£3</td></tr>
+      <tr><td>Gatwick (LGW)</td><td>Thameslink or Southern (skip the Gatwick Express)</td><td>~£12–20</td></tr>
+      <tr><td>Stansted (STN)</td><td>National Express coach</td><td>~£8–15</td></tr>
+      <tr><td>Luton (LTN)</td><td>Coach, or Thameslink + DART shuttle</td><td>~£8–22</td></tr>
+      <tr><td>Southend (SEN)</td><td>Train from Liverpool Street</td><td>~£17</td></tr>
+      </tbody></table>
+      <p style="margin-top:10px;color:var(--muted);font-size:13px">Two people paying £40 return each to reach Stansted can wipe out a £30 fare saving, so factor it in.</p>
+    </section>
+    <section class="panel"><h3>Booking cheaply</h3><ul>
+      <li><b>Hand luggage only.</b> Ryanair, Wizz and easyJet include a small under-seat bag. Sharing one paid cabin bag between you is usually cheaper than each checking a bag.</li>
+      <li><b>Search "London (all airports)"</b> on Skyscanner or Google Flights, not a single airport.</li>
+      <li><b>Use the flexible-date views:</b> Google Flights' date grid and Skyscanner's "whole month" view. Set price alerts on 3–4 favourites.</li>
+      <li><b>Timing:</b> roughly 6–10 weeks ahead for European city breaks and 3–5 months ahead for summer beach trips and bank holidays.</li>
+      <li><b>Packages:</b> for Tunisia, Turkey, Egypt and the Canaries, easyJet holidays, Jet2holidays and TUI packages are often cheaper than booking separately, and they're ATOL-protected.</li>
+      <li><b>Free cancellation:</b> book a refundable hotel early, then rebook if the price drops.</li>
+      <li><b>For 3 nights, hotels usually beat Airbnb</b> because of cleaning and service fees. For 4–5 nights, or in pricey places (Nordics, Switzerland, Iceland), an Airbnb with a kitchen saves the most.</li>
+      <li><b>Pay in local currency</b> with a fee-free card. Never accept the card machine's "pay in GBP" option.</li>
+    </ul></section>
+    <section class="panel"><h3>Entry notes for UK passports</h3><ul>
+      <li><b>Schengen countries</b> (including Croatia, Bulgaria and Romania): EES biometric checks at the border can mean queues. ETIAS pre-registration (~€20) is due to start around late 2026, so check before you travel.</li>
+      <li><b>Azerbaijan:</b> ASAN e-visa online (~$25) before you fly.</li>
+      <li><b>Egypt:</b> visa on arrival (~$25) or e-visa.</li>
+      <li><b>Visa-free:</b> Turkey, Georgia, Armenia, Morocco, Tunisia, Albania, the Western Balkans and Moldova.</li>
+      <li><b>Left out on purpose:</b> Ukraine, Russia and Belarus (the UK Foreign Office advises against travel), plus Algeria and Libya (visa or safety issues).</li>
+    </ul></section>
+    <section class="panel"><h3>How the numbers work</h3><ul>
+      <li><b>Flight:</b> the live fare for your exact dates when one has been found recently; otherwise a typical return fare for that route, adjusted by month and by school or bank holidays.</li>
+      <li><b>Stay:</b> a typical nightly rate for a 3★+ hotel rated 8+, or a whole Airbnb (plus ~£35 cleaning), split between the two of you.</li>
+      <li><b>Tiers:</b> £ is under £200 each, ££ is £200–350, £££ is over £350. Daily spending isn't included in the tier.</li>
+      <li>The buttons search live prices for your chosen dates. Booking.com opens filtered to 3★+ and rated 8+, sorted by price. Airbnb opens filtered to whole homes.</li>
+    </ul></section>
+    <section class="panel"><h3>Coverage: ${DEST.length} destinations in ${new Set(DEST.flatMap(x=>x.country.replace(' (Denmark)','').split(' / '))).size} countries</h3><ul>${regions}</ul></section>
+  </div>`;
+}
+
+function renderFresh(){
+  const el=document.getElementById('fresh');
+  if(PRICES&&PRICES.updated){
+    const n=Object.values(PRICES.flights||{}).reduce((a,o)=>a+Object.keys(o).length,0);
+    el.className='fresh live';el.lastElementChild.textContent=`Live fares updated ${ago(PRICES.updated)} · ${n.toLocaleString('en-GB')} long-weekend fares tracked`;
+  }else{el.className='fresh';el.lastElementChild.textContent='Live prices not loaded yet, so these are estimates'}
+}
+function render(){
+  const v=curView();renderFresh();
+  renderGates(v);syncToolbar(v);
+  const el=document.getElementById('view');
+  if(v==='glance')el.innerHTML=renderGlance();
+  else if(v==='tips')el.innerHTML=renderTips();
+  else el.innerHTML=renderMonth(SLUG.indexOf(v));
+}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b||b.tagName==='SELECT')return;
+  const a=b.dataset.act,v=b.dataset.v;
+  if(a==='nights'){S.nights=+v;S.pat=PATTERNS[S.nights][0].k}
+  else if(a==='pat')S.pat=v;
+  else if(a==='stay')S.stay=v;
+  else if(a==='tier'){S.tiers=S.tiers.includes(v)?S.tiers.filter(x=>x!==v):[...S.tiers,v];if(!S.tiers.length)S.tiers=[v]}
+  else if(a==='vibe')S.vibes=S.vibes.includes(v)?S.vibes.filter(x=>x!==v):[...S.vibes,v];
+  else if(a==='fri'){const m=curView();S.fri[m]=v}
+  else return;
+  save();render();
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='region')S.region=e.target.value;
+  else if(e.target.id==='sort')S.sort=e.target.value;
+  else return;
+  save();render();
+});
+window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0)});
+Promise.all([
+  fetch('data/destinations.json').then(r=>r.json()),
+  fetch('data/prices.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).catch(()=>null)
+]).then(([d,p])=>{R=d.regions;DEST=d.destinations;PRICES=p;render()})
+  .catch(()=>{document.getElementById('view').innerHTML='<p class="empty">Could not load the destination data. If you opened this file straight from your computer, start a local server instead (see README).</p>'});
+</script>
+</body>
+</html>

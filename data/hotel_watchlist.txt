@@ -1,0 +1,7 @@
+# Destinations to fetch live hotel prices for (one id per line).
+# SerpApi's free plan allows a limited number of searches a month, so keep this short.
+# The script refreshes HOTEL_SEARCHES_PER_RUN (default 3) month-searches per day, stalest first.
+# Ids are in data/destinations.json, e.g. lis = Lisbon, krk = Kraków, mla = Malta.
+lis
+krk
+mla
